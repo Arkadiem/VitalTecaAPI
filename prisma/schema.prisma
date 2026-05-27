@@ -1,0 +1,64 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  loans     Loan[]
+}
+
+model Employee {
+  id          String      @id @default(uuid())
+  name        String
+  email       String      @unique
+  password    String
+  role        String      @default("LIBRARIAN") // e.g. ADMIN, LIBRARIAN
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  loans       Loan[]
+  inventories Inventory[]
+}
+
+model Book {
+  id          String      @id @default(uuid())
+  title       String
+  author      String
+  isbn        String      @unique
+  stock       Int         @default(0)
+  loans       Loan[]
+  inventories Inventory[]
+}
+
+model Loan {
+  id         String    @id @default(uuid())
+  bookId     String
+  userId     String
+  employeeId String
+  borrowDate DateTime  @default(now())
+  returnDate DateTime?
+
+  book     Book     @relation(fields: [bookId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Inventory {
+  id         String   @id @default(uuid())
+  bookId     String
+  employeeId String
+  status     String   @default("GOOD") // e.g. GOOD, DAMAGED, LOST
+  checkDate  DateTime @default(now())
+
+  book     Book     @relation(fields: [bookId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+}

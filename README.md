@@ -1,0 +1,165 @@
+# Library Management API (crud-nest)
+
+Una API RESTful construida con **NestJS** y **Prisma ORM** (con SQLite) para gestionar el inventario y préstamos de una biblioteca.
+
+## 🚀 Tecnologías
+
+- [NestJS](https://nestjs.com/) (Framework Node.js)
+- [Prisma ORM](https://www.prisma.io/) con adaptador libSQL
+- [Turso](https://turso.tech/) (libSQL cloud database)
+- TypeScript
+- Class Validator & Class Transformer (Validación de DTOs)
+- JWT + Passport (Autenticación y Autorización)
+
+## 📋 Prerrequisitos
+
+Asegúrate de tener instalado en tu sistema:
+- [Node.js](https://nodejs.org/) (v18 o superior recomendado)
+- El gestor de paquetes `pnpm`
+
+## 🛠️ Instalación y Configuración
+
+Sigue estos pasos para inicializar la API en tu entorno local.
+
+1. **Instalar dependencias**
+   ```bash
+   pnpm install
+   ```
+
+2. **Configurar variables de entorno**
+   Copia el archivo `.env` de ejemplo y edita las variables necesarias:
+   ```bash
+   # Requerido - credenciales de Turso (libSQL cloud)
+   TURSO_DATABASE_URL="libsql://tu-db.turso.io"
+   TURSO_AUTH_TOKEN="tu-auth-token"
+   
+   # Requerido - clave secreta para firmar JWTs
+   JWT_SECRET="tu_clave_secreta_jwt"
+   ```
+
+3. **Configurar la Base de Datos (Prisma + Turso)**
+   Genera el cliente de Prisma:
+   ```bash
+   pnpm exec prisma generate
+   ```
+   Ejecuta el script de migración y seed que crea las tablas y datos iniciales en Turso:
+   ```bash
+   pnpm exec tsx prisma/seed.ts
+   ```
+   Esto crea las tablas necesarias e inserta los siguientes datos de prueba:
+   | Tipo | Email | Password | Rol |
+   |------|-------|----------|-----|
+   | Admin | admin@biblioteca.com | admin123 | ADMIN |
+   | Usuario | alice@example.com | alice123 | USER |
+
+4. **Ejecutar la aplicación**
+   ```bash
+   # Modo desarrollo estándar
+   pnpm start
+
+   # Modo watch (recarga automática al guardar, recomendado para desarrollo)
+   pnpm start:dev
+
+   # Modo producción (requiere compilar antes con pnpm build)
+   pnpm start:prod
+   ```
+
+   Una vez iniciada, la API estará escuchando peticiones en `http://localhost:3000`. Todos los endpoints tienen el prefijo `/api`.
+
+## 🔐 Autenticación y Autorización
+
+La API está protegida mediante **JSON Web Tokens (JWT)**. Para acceder a los recursos protegidos, el frontend debe incluir el token en la cabecera de las peticiones HTTP:
+`Authorization: Bearer <tu_token_jwt>`
+
+### Roles Disponibles
+El sistema maneja permisos basados en roles (RBAC):
+- **USER**: Cliente estándar de la biblioteca. Puede ver recursos básicos e interactuar con sus propios préstamos.
+- **LIBRARIAN**: Empleado de la biblioteca. Puede gestionar libros, inventarios y préstamos.
+- **ADMIN**: Administrador del sistema. Tiene control total, incluyendo la gestión de empleados y borrado de registros.
+
+### Endpoints de Auth
+- `POST /api/auth/register` - Registra un nuevo usuario (`USER`). 
+  - **Body requerido:** `{ "name": "...", "email": "...", "password": "..." }`
+  - **Body opcional:** `{ "isActive": true }` (por defecto: `true`)
+- `POST /api/auth/login` - Inicia sesión para Usuarios o Empleados.
+  - **Body requerido:** `{ "email": "...", "password": "..." }`
+  - **Respuesta:** Retorna el `access_token` (JWT) y los datos básicos del usuario logueado (incluyendo su `role`).
+
+## 📄 Paginación
+
+Todos los endpoints que listan colecciones (`GET /api/books`, `GET /api/users`, `GET /api/employees`, `GET /api/loans`, `GET /api/inventory`) ahora soportan paginación mediante query parameters:
+
+- `?page=1` (por defecto: 1)
+- `?limit=10` (por defecto: 10)
+
+**Ejemplo de petición:** `GET /api/books?page=2&limit=5`
+
+**Formato de respuesta paginada:**
+```json
+{
+  "data": [
+    // ... array de objetos
+  ],
+  "meta": {
+    "total": 50,
+    "page": 2,
+    "lastPage": 5
+  }
+}
+```
+
+## 📖 Documentación Interactiva (Swagger)
+
+Puedes explorar y probar todos los endpoints de forma visual a través de Swagger UI.
+Una vez que el servidor esté en ejecución (`pnpm start:dev`), ingresa desde tu navegador a:
+
+👉 **[http://localhost:3000/api/docs](http://localhost:3000/api/docs)**
+
+*(Nota: En Swagger encontrarás un botón "Authorize" en la parte superior para inyectar tu JWT y probar las rutas protegidas).*
+
+## 📡 Endpoints Disponibles (con prefijo `/api`)
+
+La API expone varios recursos. Todas las rutas reciben y devuelven datos en formato `JSON`.
+
+### 📚 Libros (Books)
+- `GET /api/books` - Obtener todos los libros.
+- `GET /api/books/:id` - Obtener un libro por ID.
+- `POST /api/books` - Crear un nuevo libro.
+- `PATCH /api/books/:id` - Actualizar un libro existente.
+- `DELETE /api/books/:id` - Eliminar un libro.
+
+### 👥 Usuarios (Users)
+- `GET /api/users` - Obtener todos los usuarios.
+- `GET /api/users/:id` - Obtener un usuario por ID.
+- `POST /api/users` - Crear un nuevo usuario (ADMIN)
+- `PATCH /api/users/:id` - Actualizar información de un usuario.
+- `DELETE /api/users/:id` - Eliminar un usuario.
+
+### 👔 Empleados / Bibliotecarios (Employees)
+- `GET /api/employees` - Obtener todos los empleados.
+- `GET /api/employees/:id` - Obtener un empleado por ID.
+- `POST /api/employees` - Registrar un empleado.
+- `PATCH /api/employees/:id` - Actualizar un empleado.
+- `DELETE /api/employees/:id` - Eliminar un empleado.
+
+### 📖 Préstamos (Loans)
+- `GET /api/loans` - Listar todos los préstamos registrados.
+- `GET /api/loans/:id` - Obtener detalles de un préstamo específico.
+- `POST /api/loans` - Registrar un nuevo préstamo (Automáticamente disminuye el stock del libro).
+- `PATCH /api/loans/:id` - Actualizar información genérica de un préstamo.
+- `DELETE /api/loans/:id` - Eliminar un registro de préstamo.
+- `PATCH /api/loans/:id/return` - **Devolver un libro** (Valida que no esté devuelto, actualiza la fecha de retorno y restaura el stock del libro).
+
+### 📦 Inventario (Inventory)
+- `GET /api/inventory` - Obtener los registros de revisión de inventario.
+- `GET /api/inventory/:id` - Obtener un registro específico de inventario por ID.
+- `POST /api/inventory` - Crear un nuevo registro de revisión de inventario (ej. estado de los libros).
+- `PATCH /api/inventory/:id` - Actualizar el estado en el inventario.
+- `DELETE /api/inventory/:id` - Eliminar un registro.
+
+## 🚦 Manejo de Errores y Validaciones
+
+- **Validación Automática:** Los datos de entrada (Data Transfer Objects o DTOs) están protegidos mediante el `ValidationPipe` global. Propiedades no definidas en los DTOs serán rechazadas automáticamente (`400 Bad Request`).
+- **Filtro Global de Base de Datos:** Los errores originados por Prisma son interceptados:
+  - `404 Not Found`: Al intentar buscar (`findOne`), actualizar o borrar un registro que no existe.
+  - `409 Conflict`: Al violar reglas de unicidad (ej. crear un usuario con un email ya registrado, o un libro con un ISBN repetido).
