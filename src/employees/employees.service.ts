@@ -12,11 +12,11 @@ export class EmployeesService {
 
   async create(data: CreateEmployeeDto) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    return this.prisma.employee.create({ 
+    return this.prisma.employee.create({
       data: {
         ...data,
         password: hashedPassword,
-      } 
+      },
     });
   }
 
@@ -25,17 +25,21 @@ export class EmployeesService {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       this.prisma.employee.findMany({ skip, take: limit }),
-      this.prisma.employee.count()
+      this.prisma.employee.count(),
     ]);
-    const sanitizedData = data.map(({ password, ...emp }) => emp);
+    const sanitizedData = data.map(({ password: _, ...emp }) => emp);
     return {
       data: sanitizedData,
-      meta: { total, page, lastPage: Math.ceil(total / limit) }
+      meta: { total, page, lastPage: Math.ceil(total / limit) },
     };
   }
 
-  findOne(id: string) {
-    return this.prisma.employee.findUniqueOrThrow({ where: { id } });
+  async findOne(id: string) {
+    const employee = await this.prisma.employee.findUniqueOrThrow({
+      where: { id },
+    });
+    const { password: _, ...result } = employee;
+    return result;
   }
 
   async findByEmail(email: string): Promise<Employee | null> {

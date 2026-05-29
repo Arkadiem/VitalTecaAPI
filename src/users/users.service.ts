@@ -12,11 +12,11 @@ export class UsersService {
 
   async create(data: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    return this.prisma.user.create({ 
+    return this.prisma.user.create({
       data: {
         ...data,
         password: hashedPassword,
-      } 
+      },
     });
   }
 
@@ -30,7 +30,7 @@ export class UsersService {
     ]);
 
     // Omit passwords
-    const sanitizedData = data.map(({ password, ...user }) => user);
+    const sanitizedData = data.map(({ password: _, ...user }) => user);
 
     return {
       data: sanitizedData,
@@ -38,8 +38,10 @@ export class UsersService {
     };
   }
 
-  async findOne(id: string): Promise<User> {
-    return this.prisma.user.findUniqueOrThrow({ where: { id } });
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id } });
+    const { password: _, ...result } = user;
+    return result;
   }
 
   async findByEmail(email: string): Promise<User | null> {

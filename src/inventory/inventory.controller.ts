@@ -1,11 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Role } from '../common/enums/role.enum';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth()
@@ -14,7 +31,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Post()
   @ApiOperation({ summary: 'Crear un registro de inventario' })
   @ApiResponse({ status: 201, description: 'Registro creado' })
@@ -22,15 +39,15 @@ export class InventoryController {
     return this.inventoryService.create(createInventoryDto);
   }
 
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Get()
   @ApiOperation({ summary: 'Obtener todos los registros de inventario' })
   @ApiResponse({ status: 200, description: 'Lista de registros' })
-  findAll() {
-    return this.inventoryService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.inventoryService.findAll(paginationDto);
   }
 
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un registro de inventario por ID' })
   @ApiResponse({ status: 200, description: 'Registro encontrado' })
@@ -39,16 +56,19 @@ export class InventoryController {
     return this.inventoryService.findOne(id);
   }
 
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un registro de inventario' })
   @ApiResponse({ status: 200, description: 'Registro actualizado' })
   @ApiResponse({ status: 404, description: 'Registro no encontrado' })
-  update(@Param('id') id: string, @Body() updateInventoryDto: UpdateInventoryDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateInventoryDto: UpdateInventoryDto,
+  ) {
     return this.inventoryService.update(id, updateInventoryDto);
   }
 
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un registro (solo ADMIN)' })
   @ApiResponse({ status: 200, description: 'Registro eliminado' })

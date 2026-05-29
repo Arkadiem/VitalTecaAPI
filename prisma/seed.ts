@@ -27,6 +27,7 @@ async function ensureTableUser() {
       "name"      TEXT NOT NULL,
       "email"     TEXT NOT NULL,
       "password"  TEXT NOT NULL DEFAULT '',
+      "role"      TEXT NOT NULL DEFAULT 'CLIENT',
       "isActive"  BOOLEAN NOT NULL DEFAULT true,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -38,6 +39,9 @@ async function ensureTableUser() {
 
   if (!(await columnExists('User', 'password'))) {
     await libsql.execute(`ALTER TABLE "User" ADD COLUMN "password" TEXT NOT NULL DEFAULT ''`);
+  }
+  if (!(await columnExists('User', 'role'))) {
+    await libsql.execute(`ALTER TABLE "User" ADD COLUMN "role" TEXT NOT NULL DEFAULT 'CLIENT'`);
   }
   if (!(await columnExists('User', 'createdAt'))) {
     await libsql.execute(`ALTER TABLE "User" ADD COLUMN "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`);
@@ -54,7 +58,7 @@ async function ensureTableEmployee() {
       "name"      TEXT NOT NULL,
       "email"     TEXT NOT NULL,
       "password"  TEXT NOT NULL DEFAULT '',
-      "role"      TEXT NOT NULL DEFAULT 'LIBRARIAN',
+      "role"      TEXT NOT NULL DEFAULT 'EMPLOYEE',
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -148,12 +152,12 @@ async function migrateAndSeed() {
   await libsql.execute({
     sql: `INSERT OR IGNORE INTO "Employee" (id, name, email, password, role, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    args: [empLib1Id, 'Laura García', 'laura@biblioteca.com', libPass1, 'LIBRARIAN'],
+    args: [empLib1Id, 'Laura García', 'laura@biblioteca.com', libPass1, 'EMPLOYEE'],
   });
   await libsql.execute({
     sql: `INSERT OR IGNORE INTO "Employee" (id, name, email, password, role, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    args: [empLib2Id, 'Carlos Pérez', 'carlos@biblioteca.com', libPass2, 'LIBRARIAN'],
+    args: [empLib2Id, 'Carlos Pérez', 'carlos@biblioteca.com', libPass2, 'EMPLOYEE'],
   });
 
   // ─── Users ───
@@ -166,18 +170,18 @@ async function migrateAndSeed() {
   const userId3 = randomUUID();
 
   await libsql.execute({
-    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, isActive, createdAt, updatedAt)
-          VALUES (?, ?, ?, ?, 1, datetime('now'), datetime('now'))`,
+    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, role, isActive, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, 'CLIENT', 1, datetime('now'), datetime('now'))`,
     args: [userId1, 'Alice Smith', 'alice@example.com', userPass1],
   });
   await libsql.execute({
-    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, isActive, createdAt, updatedAt)
-          VALUES (?, ?, ?, ?, 1, datetime('now'), datetime('now'))`,
+    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, role, isActive, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, 'CLIENT', 1, datetime('now'), datetime('now'))`,
     args: [userId2, 'Bob Johnson', 'bob@example.com', userPass2],
   });
   await libsql.execute({
-    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, isActive, createdAt, updatedAt)
-          VALUES (?, ?, ?, ?, 1, datetime('now'), datetime('now'))`,
+    sql: `INSERT OR IGNORE INTO "User" (id, name, email, password, role, isActive, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, 'CLIENT', 1, datetime('now'), datetime('now'))`,
     args: [userId3, 'Charlie Brown', 'charlie@example.com', userPass3],
   });
 
@@ -258,10 +262,12 @@ async function migrateAndSeed() {
   console.log('\n╔══════════════════════════════════════════╗');
   console.log('║   CREDENCIALES DE PRUEBA                ║');
   console.log('╠══════════════════════════════════════════╣');
-  console.log('║  Admin  → admin@biblioteca.com / admin123  ║');
-  console.log('║  User   → alice@example.com / alice123     ║');
-  console.log('║  User   → bob@example.com / bob123         ║');
-  console.log('║  User   → charlie@example.com / charlie123 ║');
+  console.log('║  Admin    → admin@biblioteca.com / admin123  ║');
+  console.log('║  Empleado → laura@biblioteca.com / librarian123 ║');
+  console.log('║  Empleado → carlos@biblioteca.com / librarian456 ║');
+  console.log('║  Cliente  → alice@example.com / alice123     ║');
+  console.log('║  Cliente  → bob@example.com / bob123         ║');
+  console.log('║  Cliente  → charlie@example.com / charlie123 ║');
   console.log('╚══════════════════════════════════════════╝');
 
   console.log('\nMigración y Seed completados con éxito.');

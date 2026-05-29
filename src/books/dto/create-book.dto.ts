@@ -3,14 +3,23 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBookDto {
   @ApiProperty({ example: 'Cien Años de Soledad' })
-  @IsString() @IsNotEmpty() title: string;
+  @IsString()
+  @IsNotEmpty()
+  title: string;
 
   @ApiProperty({ example: 'Gabriel García Márquez' })
-  @IsString() @IsNotEmpty() author: string;
+  @IsString()
+  @IsNotEmpty()
+  author: string;
 
   @ApiProperty({ example: '978-0307474728' })
-  @IsString() @IsNotEmpty() isbn: string;
+  @IsString()
+  @IsNotEmpty()
+  isbn: string;
 
   @ApiProperty({ required: false, default: 0, example: 10 })
-  @IsInt() @Min(0) @IsOptional() stock?: number;
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  stock?: number;
 }

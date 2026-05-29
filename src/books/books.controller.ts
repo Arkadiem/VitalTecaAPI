@@ -1,11 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Role } from '../common/enums/role.enum';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Books')
@@ -15,7 +31,7 @@ export class BooksController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo libro' })
   @ApiResponse({ status: 201, description: 'Libro creado exitosamente' })
@@ -41,7 +57,7 @@ export class BooksController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'LIBRARIAN')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un libro' })
   @ApiResponse({ status: 200, description: 'Libro actualizado' })
@@ -52,7 +68,7 @@ export class BooksController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles(Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un libro (solo ADMIN)' })
   @ApiResponse({ status: 200, description: 'Libro eliminado' })

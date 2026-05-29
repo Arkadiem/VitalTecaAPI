@@ -1,14 +1,22 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '../../common/enums/role.enum';
 
 export class CreateEmployeeDto {
   @ApiProperty()
-  @IsString() 
-  @IsNotEmpty() 
+  @IsString()
+  @IsNotEmpty()
   name: string;
-  
+
   @ApiProperty()
-  @IsEmail() 
+  @IsEmail()
   email: string;
 
   @ApiProperty()
@@ -16,9 +24,9 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   @MinLength(6)
   password: string;
-  
-  @ApiProperty({ required: false, default: 'LIBRARIAN' })
-  @IsString() 
-  @IsOptional() 
-  role?: string;
+
+  @ApiProperty({ required: false, default: Role.EMPLOYEE, enum: Role })
+  @IsEnum(Role)
+  @IsOptional()
+  role?: Role;
 }

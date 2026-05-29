@@ -6,11 +6,18 @@ datasource db {
   provider = "sqlite"
 }
 
+enum Role {
+  ADMIN
+  EMPLOYEE
+  CLIENT
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
   password  String
+  role      Role     @default(CLIENT)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -22,7 +29,7 @@ model Employee {
   name        String
   email       String      @unique
   password    String
-  role        String      @default("LIBRARIAN") // e.g. ADMIN, LIBRARIAN
+  role        Role        @default(EMPLOYEE)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   loans       Loan[]
